@@ -1,5 +1,11 @@
 import pygame as pg
+# from level import Grass, PlantShop
+from baseClasses import *
+from basePlants import *
+from plants import *
 
+
+plants = Plants()
 
 def main():
     pg.init()
@@ -12,16 +18,11 @@ def main():
     background = background.convert()
     background.fill("Blue")
 
-    # test = pg.image.load("refrance.jpg")
-    # test.convert()
-    # test = pg.transform.scale(test,(1200,900))
-    # background.blit(test, (0,0))
+    field = Grass()
+    field.draw(background)
+    shop = PlantShop()
+    shop.draw(background)
 
-    # Put Text On The Background, Centered
-    # font = pg.font.Font(None, 64)
-    # text = font.render("Hello World", True, (10, 10, 10))
-    # textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
-    # background.blit(text, textpos)
 
     # Display The Background
     screen.blit(background, (0, 0))
@@ -29,23 +30,14 @@ def main():
 
     # Prepare Game Objects
     clock = pg.time.Clock()
-
-    field = Grass()
-    field.draw(background)
-    shop = PlantShop()
-    shop.draw(background)
-    # seedpacks = SeedPacks(pg.Rect((120, 0), (550, 100)))
-    # seedpacks.draw(background)
-    # temp2 = SunBalance((75, 100))
-    # temp3 = PlantShop()
-
     sun = SunBalance(shop.sunRect.center)
+    # peashooter = Peashooter((100,100))
 
-
-    # background.blit(temp2, (0,0))
 
     # Main Loop
     going = True
+    # bought = False
+    plant = None
     while going:
         clock.tick(60)
         frame = pg.Surface(screen.get_size())
@@ -59,25 +51,37 @@ def main():
                 going = False
             elif event.type == pg.MOUSEBUTTONDOWN:
                 pos = event.pos
-                if field.checkClick(pos):
+                if field.checkClick(pos) and plant:
                     print(f"Field: {field.getTile(pos)}")
-                    tile = shop.getTile(pos)
-                    gain = field.place(tile)
-                    sun.updateSun(sun.getSun() + gain)
+                    tile = field.getTile(pos)
+                    good = field.place(tile, plant)
+                    if good:
+                        plant = None
 
-                elif shop.checkClick(pos):
+                elif shop.checkClickSeeds(pos) and not plant:
                     print(f"Shop: {shop.getTile(pos)}")
                     tile = shop.getTile(pos)
-                    if shop.buy(tile, sun):
-                        bought = True
-                    else:
+                    plant = shop.buy(tile, sun)
+                    if plant == -1:
+                        plant = None
+                    elif not plant:
                         sun.blink()
+
+
+                elif shop.checkClickShovel(pos):
+                    print(shop.getTile(pos))
+
+                elif shop.checkClickSun(pos):
+                    # usually do nothing
+                    sun.updateSun(200)
                     
 
         # Draw Everything
         screen.blit(background, (0, 0)) #cover everthing from last frame with background
         # temp3.drawChanging(screen)
         sun.draw(screen)
+        plants.draw(screen)
+        # peashooter.draw(screen)
         # screen.blit(frame, (0,0))
 
 
@@ -86,56 +90,17 @@ def main():
     pg.quit()
 
 
-class BackgroundObject:
-
-    def __init__(self, rect: pg.Rect) -> None:
-        self.rect = rect
-
-    def draw(self, surface: pg.Surface) -> None:
-        pg.draw.rect(surface, "Green", self.rect, 10)
-
-
-class BackgroundContainer:
-
-    def __init__(self, rect: pg.Rect, size: tuple, object: BackgroundObject) -> None:
-        self.rect = rect
-        self.matrix = []
-        self.size = size
-
-        rows = size[1]      # y
-        columns = size[0]   # x
-
-        xStep = self.rect.width//columns
-        yStep = self.rect.height//rows
-        for y in range(rows):
-            row = []
-            for x in range(columns):
-                pos = (self.rect.left + x * xStep, self.rect.top + y * yStep)
-                row.append(object(pg.Rect(pos, (xStep, yStep))))
-
-            self.matrix.append(row)
-
-
-    def draw(self, surface: pg.Surface) -> None:
-        for y in range(self.size[1]):
-            for x in range(self.size[0]):
-                self.matrix[y][x].draw(surface)
-
-    def checkClick(self, pos: tuple) -> bool:
-        return self.rect.collidepoint(pos)
-    
-    def getTile(self, pos: tuple) -> tuple:
-        xStep = self.rect.width//self.size[0]
-        yStep = self.rect.height//self.size[1]
-        x = (pos[0] - self.rect.left) // xStep
-        y = (pos[1] - self.rect.top) // yStep
-        return (x, y) 
-
-
-
 class GrassTile(BackgroundObject):
-    def __init__(self, rect: pg.Rect) -> None:
+    def __init__(self, rect: pg.Rect, plant: Plant = None) -> None:
         super().__init__(rect)
+        self.plant = plant
+        if self.plant:
+            self.initPlant()
+
+    def initPlant(self):
+        self.plant = self.plant(self.rect)
+        plants.addPlant(self.plant)
+
 
 
 
@@ -144,8 +109,16 @@ class Grass(BackgroundContainer):
         pos = (50, 100)
         super().__init__(pg.Rect(pos, (1100, 756)), (9,5), GrassTile)
 
-    def place(self, tile):
-        return 100
+    def place(self, tile, plant: Plant) -> bool:
+        grassTile = self.matrix[tile[1]][tile[0]]
+        if not grassTile.plant:
+            grassTile.plant = plant
+            grassTile.initPlant()
+            return True
+        else:
+            return False
+
+
 
 
 
@@ -156,9 +129,10 @@ class SunBalance:
         self.font = pg.font.Font(None, self.size)
         self.pos = pos          #center of text
         self.sun = 0
+        self.color = "Black"
 
     def draw(self, surface: pg.Surface) -> None:
-        text = self.font.render(str(self.sun), True, "Black")
+        text = self.font.render(str(self.sun), True, self.color)
         textpos = text.get_rect(center = self.pos)
 
         surface.blit(text, textpos)
@@ -171,6 +145,7 @@ class SunBalance:
     
     def blink(self):
         print("blink")
+        self.color = "Red"
 
 
 class PlantShop:
@@ -190,25 +165,19 @@ class PlantShop:
 
         self.sunRect = pg.Rect(self.rect.topleft, (sunImageSquare, sunImageSquare))
 
-        # sunPos = (sunImageSquare//2 + self.offset[0], sunImageSquare-40)
-        # self.sunBalance = SunBalance(sunPos)
-
-    # def drawChanging(self, surface: pg.Surface) -> None:
-    #     self.sunBalance.drawChanging(surface)
-
     def draw(self, surface: pg.Surface) -> None:
         pg.draw.rect(surface, "Yellow", self.sunRect)
         self.seeds.draw(surface)
         self.shovel.draw(surface)
 
-    # def updateSun(self, sun: int) -> None:
-    #     self.sunBalance.updateSun(sun)
-
-    # def getSun(self) -> int:
-    #     return self.sunBalance.getSun()
-
-    def checkClick(self, pos: tuple) -> bool:
-        return self.rect.collidepoint(pos)
+    def checkClickSeeds(self, pos: tuple) -> bool:
+        return self.seeds.checkClick(pos)
+    
+    def checkClickShovel(self, pos: tuple) -> bool:
+        return self.shovel.rect.collidepoint(pos)
+    
+    def checkClickSun(self, pos: tuple) -> bool:
+        return self.sunRect.collidepoint(pos)
     
     def getTile(self, pos: tuple) -> int:
         if self.shovel.rect.collidepoint(pos):
@@ -224,11 +193,14 @@ class PlantShop:
     def buy(self, tile: tuple, sun: SunBalance):
         currentSun = sun.getSun()
         cost = self.seeds.matrix[tile[1]][tile[0]].getCost()
-        if cost <= currentSun:
+        if cost == -1:
+            print("No plant")
+            return -1
+        elif cost <= currentSun:
             sun.updateSun(currentSun- cost)
-            return True
+            return self.seeds.matrix[tile[1]][tile[0]].plant.plant
         else:
-            return False
+            return None
 
     
 
@@ -242,16 +214,40 @@ class SeedPacks(BackgroundContainer):
 
     def __init__(self, rect: pg.Rect) -> None:
         super().__init__(rect, (6, 1), SeedPack)
+        # self.matrix[0][0].plant = Peashooter
+        self.addPlant(ShopPeashooter)
+        self.addPlant(ShopSunflower)
+
+    def addPlant(self, plant: ShopPlant):
+        for slot in self.matrix[0]:
+            if not slot.plant:
+                slot.plant = plant
+                slot.initPlant()
+                break
 
 
 class SeedPack(BackgroundObject):
 
-    def __init__(self, rect: pg.Rect) -> None:
+    def __init__(self, rect: pg.Rect, plant: ShopPlant = None) -> None:
         super().__init__(rect)
-        self.cost = 100
+        self.cost = -1
+        self.plant = plant
+        if self.plant:
+            self.initPlant()
 
     def getCost(self) -> int:
         return self.cost
+    
+    def draw(self, surface: pg.Surface):
+        if self.plant:
+            self.plant.draw(surface)
+        else:
+            BackgroundObject.draw(self, surface)
+
+    def initPlant(self):
+        self.plant = self.plant(self.rect)
+        self.cost = self.plant.getCost()
+
 
 
 
