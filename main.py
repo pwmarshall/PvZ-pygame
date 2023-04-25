@@ -1,4 +1,6 @@
 import pygame as pg
+import numpy
+import random
 # from level import Grass, PlantShop
 from baseClasses import *
 from basePlants import *
@@ -31,7 +33,9 @@ def main():
     # Prepare Game Objects
     clock = pg.time.Clock()
     sun = SunBalance(shop.sunRect.center)
-    test = Sun((500,0), 500)
+    # test = Sun((500,0), 500)
+    skySun = Sky()
+
     # peashooter = Peashooter((100,100))
 
 
@@ -40,7 +44,7 @@ def main():
     # bought = False
     plant = None
     while going:
-        clock.tick(60)
+        clock.tick(FRAME_RATE)
         frame = pg.Surface(screen.get_size())
         frame = frame.convert()
 
@@ -78,7 +82,7 @@ def main():
                     sun.updateSun(200)
             
             elif event.type == SUN_CLICKED:
-                print("custom")
+                # print("custom")
                 sun.addSun(event.sun)
                     
 
@@ -88,6 +92,7 @@ def main():
         sun.draw(screen)
         Plant.drawAll(screen)
         Projectile.drawAll(screen)
+        skySun.tick()
         # test.draw(screen)
         # test.move()
         # peashooter.draw(screen)
@@ -260,7 +265,22 @@ class SeedPack(BackgroundObject):
         self.cost = self.plant.getCost()
 
 
+class Sky:
 
+    def __init__(self) -> None:
+        self.cooldown = 10 #numpy.random.normal(10,1) #secs
+        self.tickCount = 0
+        self.spawnSun()
+
+    def tick(self):
+        self.tickCount += 1
+        if self.tickCount % int(FRAME_RATE * self.cooldown) == 0:
+            self.spawnSun()
+            self.cooldown = numpy.random.normal(10,1)
+            self.tickCount = 0
+
+    def spawnSun(self):
+        Sun((random.uniform(100, 1000), 0), random.uniform(300,800))
 
 
 if __name__ == "__main__":

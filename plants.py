@@ -14,12 +14,12 @@ class Sunflower(Plant):
 
     def __init__(self, rect: pg.Rect) -> None:
         super().__init__(rect, "temp-files\\sunflower.webp")
-        self.tickCount = 60*20      #first sun only 4 seconds after place
+        self.tickCount = FRAME_RATE*20      #first sun only 4 seconds after place
 
     def tick(self):
         self.tickCount += 1
 
-        if self.tickCount % (60*24) == 0: #60 ticks a second, every 24 seconds
+        if self.tickCount % (FRAME_RATE*24) == 0: #60 ticks a second, every 24 seconds
             self.spawnSun()
 
     def spawnSun(self):
