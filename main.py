@@ -3,9 +3,9 @@ import pygame as pg
 from baseClasses import *
 from basePlants import *
 from plants import *
+from constants import *
 
 
-plants = Plants()
 
 def main():
     pg.init()
@@ -31,6 +31,7 @@ def main():
     # Prepare Game Objects
     clock = pg.time.Clock()
     sun = SunBalance(shop.sunRect.center)
+    test = Sun((500,0), 500)
     # peashooter = Peashooter((100,100))
 
 
@@ -51,6 +52,7 @@ def main():
                 going = False
             elif event.type == pg.MOUSEBUTTONDOWN:
                 pos = event.pos
+                Projectile.checkClickAll(pos)
                 if field.checkClick(pos) and plant:
                     print(f"Field: {field.getTile(pos)}")
                     tile = field.getTile(pos)
@@ -74,13 +76,20 @@ def main():
                 elif shop.checkClickSun(pos):
                     # usually do nothing
                     sun.updateSun(200)
+            
+            elif event.type == SUN_CLICKED:
+                print("custom")
+                sun.addSun(event.sun)
                     
 
         # Draw Everything
         screen.blit(background, (0, 0)) #cover everthing from last frame with background
         # temp3.drawChanging(screen)
         sun.draw(screen)
-        plants.draw(screen)
+        Plant.drawAll(screen)
+        Projectile.drawAll(screen)
+        # test.draw(screen)
+        # test.move()
         # peashooter.draw(screen)
         # screen.blit(frame, (0,0))
 
@@ -99,8 +108,6 @@ class GrassTile(BackgroundObject):
 
     def initPlant(self):
         self.plant = self.plant(self.rect)
-        plants.addPlant(self.plant)
-
 
 
 
@@ -128,7 +135,7 @@ class SunBalance:
         self.size = 32
         self.font = pg.font.Font(None, self.size)
         self.pos = pos          #center of text
-        self.sun = 0
+        self.sun = 50
         self.color = "Black"
 
     def draw(self, surface: pg.Surface) -> None:
@@ -143,9 +150,13 @@ class SunBalance:
     def getSun(self) -> int:
         return self.sun
     
+    def addSun(self, amount: int) -> None:
+        self.sun += amount
+    
     def blink(self):
         print("blink")
         self.color = "Red"
+        
 
 
 class PlantShop:
@@ -254,3 +265,4 @@ class SeedPack(BackgroundObject):
 
 if __name__ == "__main__":
     main()
+    # test()

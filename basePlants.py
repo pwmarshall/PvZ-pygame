@@ -7,16 +7,28 @@ class PlantEnum(Enum):
 
 
 class Plant:
+    plants = []
 
     def __init__(self, rect: pg.Rect, filename: str) -> None:
-        self.pos = rect.topleft
+        # self.pos = rect.topleft
+        self.rect = rect
         self.img = pg.image.load(filename)
         self.img.convert()
-        self.img = pg.transform.scale(self.img,(rect.width,rect.height))
-
+        self.img = pg.transform.scale(self.img,(self.rect.width, self.rect.height))
+        Plant.plants.append(self)
 
     def draw(self, surface: pg.Surface) -> None:
-        surface.blit(self.img, self.pos)
+        surface.blit(self.img, self.rect.topleft)
+
+    def drawAll(surface: pg.Surface):
+        for plant in Plant.plants:
+            plant.draw(surface)
+            plant.tick()
+
+    def tick(self):
+        #override in subclasses
+        pass
+
 
 class ShopPlant:
 
@@ -34,18 +46,6 @@ class ShopPlant:
     def getCost(self):
         return self.cost
 
-
-class Plants:
-
-    def __init__(self) -> None:
-        self.plants = []
-
-    def addPlant(self, plant: Plant):
-        self.plants.append(plant)
-
-    def draw(self, surface: pg.Surface):
-        for plant in self.plants:
-            plant.draw(surface)
 
 
 

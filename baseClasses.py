@@ -44,3 +44,34 @@ class BackgroundContainer:
         x = (pos[0] - self.rect.left) // xStep
         y = (pos[1] - self.rect.top) // yStep
         return (x, y) 
+    
+
+class Projectile:
+    all = []
+
+    def __init__(self, rect: pg.Rect, vel: tuple, filename: str) -> None:
+        self.rect = rect
+        self.vel = vel
+        self.img = pg.image.load(filename)
+        self.img.convert()
+        self.img = pg.transform.scale(self.img,(self.rect.width, self.rect.height))
+        Projectile.all.append(self)
+        self.clickable = False
+
+    def draw(self, surface):
+        surface.blit(self.img, self.rect.topleft)
+
+    def move(self):
+        self.rect = self.rect.move(self.vel)
+    
+    def drawAll(surface):
+        for proj in Projectile.all:
+            proj.draw(surface)
+            proj.move()
+
+    def checkClickAll(pos):     #check but also action
+        for proj in Projectile.all:
+            if proj.clickable:
+                if proj.checkClick(pos):
+                    proj.clicked()
+            
