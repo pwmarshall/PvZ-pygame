@@ -9,7 +9,7 @@ class PlantEnum(Enum):
 class Plant:
     plants = []
 
-    def __init__(self, rect: pg.Rect, filename: str) -> None:
+    def __init__(self, rect: pg.Rect, filename: str, health: int = 300) -> None:
         # self.pos = rect.topleft
         self.rect = rect
         self.img = pg.image.load(filename)

@@ -1,14 +1,21 @@
 from baseClasses import Projectile
 from basePlants import *
 from constants import *
+from zombies import *
 
 class Peashooter(Plant):
 
     def __init__(self, rect: pg.Rect) -> None:
         super().__init__(rect, "temp-files\\peashooter.webp")
+        # self.row = row
+        self.tickCount = 0
 
-        # test = pg.image.load("temp-files\\peashooter.webp")
-        # test.convert()
+    def tick(self):
+        pass
+
+    def checkZombie(self):
+        pass
+
 
 class Sunflower(Plant):
 

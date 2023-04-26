@@ -2,10 +2,12 @@ import pygame as pg
 import numpy
 import random
 # from level import Grass, PlantShop
+
 from baseClasses import *
 from basePlants import *
 from plants import *
 from constants import *
+from zombies import *
 
 
 
@@ -35,6 +37,7 @@ def main():
     sun = SunBalance(shop.sunRect.center)
     # test = Sun((500,0), 500)
     skySun = Sky()
+    test = Zombie(field.matrix[0][8].rect)
 
     # peashooter = Peashooter((100,100))
 
@@ -92,6 +95,7 @@ def main():
         sun.draw(screen)
         Plant.drawAll(screen)
         Projectile.drawAll(screen)
+        Zombies.drawAll(screen)
         skySun.tick()
         # test.draw(screen)
         # test.move()
